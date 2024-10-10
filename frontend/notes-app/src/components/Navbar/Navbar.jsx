@@ -18,7 +18,7 @@ const Navbar = () => {
 
   };
   const onClearSearch = () => {
-    setSearchQuery();
+    setSearchQuery("")
   };
 
   return (
