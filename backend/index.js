@@ -6,6 +6,7 @@ const mongoose = require("mongoose");
 mongoose.connect(config.connectionString);
 
 const User = require("./models/user.model");
+const Note = require("./models/note.model");
 
 const express = require("express");
 const cors = require("cors");
@@ -71,6 +72,86 @@ app.post('/create-account', async(req, res) => {
         accessToken,
         message : "Registration Success",
     });
+});
+
+//Login
+app.post('/login', async (req, res) => {
+    const {email, password} = req.body;
+
+    if(!email){
+        return res
+        .status(400)
+        .json({error : true, message : "Email is required!"});
+    }
+    if(!password){
+        return res
+        .status(400)
+        .json({error : true, message : "Password is required!"});
+    }
+
+    const userInfo = await User.findOne({ email : email });
+
+    if(!userInfo){
+        return res
+        .status(400)
+        .json({error : true, message : "User not found!"});
+    }
+
+    if(userInfo.email == email && userInfo.password == password){
+        const user = { user : userInfo};
+        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: "36000m",
+        });
+
+        return res.json({
+            error : false,
+            message : "Login Successful",
+            email,
+            accessToken,
+        });
+    } else {
+        return res
+        .status(400)
+        .json({error : true, message : "Invalid Credentials!",
+        });
+    }
+});
+
+//Add Note
+app.post('/add-note', authenticateToken, async (req, res) => {
+    const {title, content, tags} = req.body;
+    const { user } = req.user;
+
+    if(!title){
+        return res
+        .status(400)
+        .json({error : true, message : "Title is Required!"})
+    }
+    if(!content){
+        return res
+        .status(400)
+        .json({error : true, message : "Content is Required!"})
+    }
+
+    try{
+        const note = new Note({
+            title,
+            content,
+            tags: tags || [],
+            userId: user._id,
+        });
+
+        await note.save();
+        return res.json({
+            error : false,
+            note,
+            message : "Note added Successfully!",
+        });
+    } catch(error){
+        return res
+        .status(500)
+        .json({error : true, message : "Internal Server Error!"})
+    }
 });
 
 app.listen(8000);
