@@ -190,5 +190,22 @@ app.put('/edit-note/:noteId', authenticateToken, async (req, res) => {
     }
 });
 
+//Get All Notes
+app.get('/get-all-note', authenticateToken, async (req, res) => {
+    const { user } = req.user;
+
+    try {
+        const notes = await Note.find({ userId : user._id}).sort({ isPinned : -1 });
+
+        return res
+        .status(400)
+        .json({error : false, message : "All Notes Retrieved Successfully!"});
+    } catch (error){
+        return res
+        .status(500)
+        .json({error : true, message : "Internal Server Error!"});
+    }
+});
+
 app.listen(8000);
 module.exports = app;
