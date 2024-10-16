@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '../../components/Navbar/Navbar';
 import NoteCard from '../../components/Cards/NoteCard';
 import { MdAdd } from 'react-icons/md';
 import AddEditNotes from './AddEditNotes';
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../utils/axiosinstances';
 
 const Home = () => {
 
@@ -14,25 +15,64 @@ const Home = () => {
     data: null,
   });
 
+  const [allNotes, setAllNotes] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
   const navigate = useNavigate();
 
+  //Get User Info
+  const getUserInfo = async () => {
+    try{
+      const response = await axiosInstance.get("/get-user");
+      if(response.data && response.data.user){
+        setUserInfo(response.data.useNavigate);
+      }
+    } catch(error){
+        if(error.response.status === 401){
+          localStorage.clear();
+          navigate("/login");
+        }
+    }
+  };
+
+  //Get All Notes
+  const getAllNotes = async () => {
+    try{
+      const response = await axiosInstance.get('/get-all-notes');
+
+      if(response.data && response.data.notes){
+        setAllNotes(response.data.notes);
+      }
+    } catch(error){
+      console.log("An unexpected error occured. please try again.");
+    }
+  };
+
+  useEffect(() => {
+    getAllNotes();
+    getUserInfo();
+    return () => {};
+  }, []);
+
   return (
     <div>
-      <Navbar />
+      <Navbar userInfo={userInfo} />
       
       <div className='container mx-auto'>
         <div className='grid grid-cols-3 gap-4 mt-8'>
-          <NoteCard 
-            title="Meeting on 10th Octuber" 
-            date="10th Oct 2024" 
-            content="Meeting on 10th Octuber Meeting on 10th Octuber"
-            tags="#Meeting" 
-            isPinned={true}
+          {allNotes.map((items, index) => (
+            <NoteCard 
+            key={items._id}
+            title={items.title} 
+            date={item.createdOn}
+            content={items.content}
+            tags={items.tags}
+            isPinned={items.isPinned}
             onEdit={()=>{}}
             onDelete={()=>{}}
             onPinNote={()=>{}}
           />
+          ))}
+          
         </div>
       </div>
 
