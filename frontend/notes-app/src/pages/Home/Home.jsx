@@ -6,6 +6,8 @@ import AddEditNotes from './AddEditNotes';
 import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axiosinstances';
+import AddNotesImg from '../../assets/images/add-notes.svg';
+import NoDataImg from "../../assets/images/no-data.svg";
 
 const Home = () => {
 
@@ -23,6 +25,9 @@ const Home = () => {
 
   const [allNotes, setAllNotes] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
+
+  const [isSearch, setIsSearch] = useState(false);
+
   const navigate = useNavigate();
   const handleEdit = (noteDetails) => {
     setOpenAddEditModal({ isShown : true, data : noteDetails, type : "edit"});
@@ -72,7 +77,58 @@ const Home = () => {
   };
 
   //Delete Note
-  
+  const deleteNote = async (data) => {
+    const noteId = data._id
+    try{
+      const response = await axiosInstance.delete('/delete-note' + noteId);
+
+      if(response.data && !response.data.error){
+          showToastMessage("Note Deleted Successfully!", "delete");
+          getAllNotes();
+      }
+    } catch(error){
+        if(error.response && error.response.data && error.response.data.message){
+        console.log("An unexpected Error occured. Please try Again.");
+        }
+    }
+  }
+
+  //Search Notes
+  const onSearchNote = async (query) => {
+    try{
+      const response = await axiosInstance.get("/search-notes",{
+        params: { query },
+      });
+      if(response.data && response.data.notes){
+        setIsSearch(true);
+        setAllNotes(response.data.notes);
+      }
+    } catch(error){
+      console.log(error);
+    }
+  };
+
+  //Pin Notes 
+  const updateIsPinned = async (noteData) => {
+    const noteId = noteData._id
+    try{
+      const response = await axiosInstance.put('/update-note-pinned' + noteId, {
+        "isPinned": !noteData.isPinned,
+      });
+
+      if(response.data && response.data.note){
+          showToastMessage("Note Pinned Successfully!");
+          getAllNotes();
+      }
+    } catch(error){
+        console.log(error);
+    }
+  }
+
+  const handleClearSearch = () => {
+    setIsSearch(false);
+    getAllNotes();
+  };
 
   useEffect(() => {
     getAllNotes();
@@ -82,25 +138,25 @@ const Home = () => {
 
   return (
     <div>
-      <Navbar userInfo={userInfo} />
+      <Navbar userInfo={userInfo} onSearchNote={onSearchNote} handleClearSearch={handleClearSearch} />
       
       <div className='container mx-auto'>
-        <div className='grid grid-cols-3 gap-4 mt-8'>
-          {allNotes.map((items, index) => (
-            <NoteCard 
-            key={items._id}
-            title={items.title} 
-            date={item.createdOn}
-            content={items.content}
-            tags={items.tags}
-            isPinned={items.isPinned}
-            onEdit={()=> handleEdit(item)}
-            onDelete={()=>{}}
-            onPinNote={()=>{}}
-          />
-          ))}
-          
-        </div>
+      {allNotes.length > 0 ? (<div className='grid grid-cols-3 gap-4 mt-8'>
+        {allNotes.map((items, index) => (
+          <NoteCard 
+          key={items._id}
+          title={items.title} 
+          date={item.createdOn}
+          content={items.content}
+          tags={items.tags}
+          isPinned={items.isPinned}
+          onEdit={()=> handleEdit(item)}
+          onDelete={()=> deleteNote(item)}
+          onPinNote={()=>updateIsPinned(item)}
+        />
+        ))}
+        
+      </div>) : ( <EmptyCard imgSrc={isSearch ? NoDataImg : AddNotesImg} message={isSearch ? `Opps! No notes were Found.` : `Start creating your first Note! Click the 'Add' button to jot down your thoughts, ideas and reminders. Let's get started!`}  /> )}
       </div>
 
       <button className='w-16 h-16 flex items-center justify-center rounded-2xl bg-primary hover:bg-blue-600 absolute right-10 bottom-10' 
