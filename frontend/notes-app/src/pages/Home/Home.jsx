@@ -15,9 +15,33 @@ const Home = () => {
     data: null,
   });
 
+  const [showToastMsg, setToastMsg] = useState({
+    isShown : false,
+    message : "",
+    type : "add",
+  });
+
   const [allNotes, setAllNotes] = useState([]);
   const [userInfo, setUserInfo] = useState(null);
   const navigate = useNavigate();
+  const handleEdit = (noteDetails) => {
+    setOpenAddEditModal({ isShown : true, data : noteDetails, type : "edit"});
+  };
+
+  const showToastMessage = (message , type) => {
+    setShowToastMsg({
+      isShown : true,
+      message,
+      type,
+    });
+  };
+  
+  const handleCloseToast = () => {
+    setShowToastMsg({
+      isShown : false,
+      message : "",
+    });
+  };
 
   //Get User Info
   const getUserInfo = async () => {
@@ -47,6 +71,9 @@ const Home = () => {
     }
   };
 
+  //Delete Note
+  
+
   useEffect(() => {
     getAllNotes();
     getUserInfo();
@@ -67,7 +94,7 @@ const Home = () => {
             content={items.content}
             tags={items.tags}
             isPinned={items.isPinned}
-            onEdit={()=>{}}
+            onEdit={()=> handleEdit(item)}
             onDelete={()=>{}}
             onPinNote={()=>{}}
           />
@@ -101,8 +128,16 @@ const Home = () => {
           setOpenAddEditModal({isShown : false, type : "add", data : null})
         }}
         getAllNotes={getAllNotes}
+        showToastMessage={showToastMessage}
         />
       </Modal>
+
+      <Toast  
+      isShown={showToastMsg.isShown}
+      message={showToastMsg.message}
+      type={showToastMsg.type}
+      onClose={handleCloseToast}
+      />
     </div>
   );
 };
