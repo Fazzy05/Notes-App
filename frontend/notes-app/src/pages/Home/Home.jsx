@@ -146,13 +146,13 @@ const Home = () => {
           <NoteCard 
           key={items._id}
           title={items.title} 
-          date={item.createdOn}
+          date={items.createdOn}
           content={items.content}
           tags={items.tags}
           isPinned={items.isPinned}
-          onEdit={()=> handleEdit(item)}
-          onDelete={()=> deleteNote(item)}
-          onPinNote={()=>updateIsPinned(item)}
+          onEdit={()=> handleEdit(items)}
+          onDelete={()=> deleteNote(items)}
+          onPinNote={()=>updateIsPinned(items)}
         />
         ))}
         
